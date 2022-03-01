@@ -67,6 +67,7 @@ def main():
     parser.add_argument("--build",             action="store_true", help="Build bitstream.")
     parser.add_argument("--bios-flash-offset", default="0x50000",   help="BIOS offset in SPI Flash.")
     parser.add_argument("--sys-clk-freq",      default=16e6,        help="System clock frequency.")
+    parser.add_argument("--flash",             action="store_true", help="Flash Bitstream and code")
     builder_args(parser)
     soc_core_args(parser)
     args = parser.parse_args()
@@ -78,6 +79,13 @@ def main():
     )
     builder = Builder(soc, **builder_argdict(args))
     builder.build(run=args.build)
+
+    if args.flash:
+        bitstream = builder.output_dir+"/gateware/"+soc.build_name+".bin"
+        bios = builder.output_dir+"/software/bios/bios.bin"
+        prog = soc.platform.create_programmer()
+        print("Calling : tinyprog -p "+bitstream+" -u "+bios)
+        prog.call(["tinyprog", "-p", bitstream, "-u", bios])
 
 if __name__ == "__main__":
     main()
